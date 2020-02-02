@@ -1,0 +1,52 @@
+---
+- hosts: all
+  vars:
+    working_dir: "/home/vagrant"
+    app_dir: "/vagrant/node_eval"
+  tasks:
+    - name: update box
+      apt:
+        update_cache: True
+      become: True
+
+    - name: Download node setup script
+      get_url:
+        url: https://deb.nodesource.com/setup_13.x
+        dest: "{{ working_dir }}/node_setup.sh"
+        mode: 0755
+
+    - name: Run node setup script
+      command: "{{ working_dir }}/node_setup.sh"
+      become: True
+
+    - name: Install nodejs
+      apt:
+        name: nodejs
+        update_cache: True
+      become: True
+
+    - name: Install dependencies
+      npm:
+        path: "{{ app_dir }}"
+
+    - name: Install pm2
+      npm:
+        name: pm2
+        global: True
+      become: True
+
+    - name: Use pm2 to start App
+      command:
+        cmd: "pm2 start npm --name=app -- run serverstart"
+        chdir: "{{ app_dir }}"
+
+    - name: Configure pm2 to start app with systemd
+      command:
+        cmd: "pm2 startup systemd"
+        chdir: "{{ app_dir }}"
+      become: True
+
+    - name: Save pm2 config
+      command:
+        cmd: "pm2 save"
+        chdir: "{{ app_dir }}"
