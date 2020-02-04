@@ -1,17 +1,18 @@
 var safeEval = require('safe-eval');
 
 exports.user_eval_post = function(req, res) {
-  ref = "ref";
+  var ref = {
+    results: [],
+    resultsMap: []
+  };
   console.log(req.body);
   if (req.body.eval) {
     console.log(`Running eval(value = ref.${req.body.eval};);`);
     results = eval('value = ref.' + req.body.eval + ';');
   } else if (req.body.safe) {
     console.log(`Running safeEval(${req.body.safe});`);
-    var context = {
-      ref: ref
-    }
-    var code = 'value = ref.' + req.body.safe + ';'
+    var context = {ref:ref}
+    var code = req.body.safe
     results = safeEval(code, context);
     console.log(results);
   } else {
